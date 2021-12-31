@@ -16,8 +16,8 @@ namespace AvaloniaAnalyzers
         private static readonly string[] WpfAssemblyNames = new[] { "WindowsBase", "PresentationCore", "PresentationFramework", "System.Windows" };
 
         public const string DiagnosticId = "WpfTypeToAvaloniaType";
-        internal static readonly LocalizableString Title = "This type is a WPF type.";
-        internal static readonly LocalizableString MessageFormat = "'{0}' is a WPF type.";
+        internal static readonly LocalizableString Title = "This type is a WPF type";
+        internal static readonly LocalizableString MessageFormat = "'{0}' is a WPF type";
         internal const string Category = "AvaloniaConversion";
 
         internal static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, true);
@@ -26,6 +26,8 @@ namespace AvaloniaAnalyzers
 
         public override void Initialize(AnalysisContext context)
         {
+            context.EnableConcurrentExecution();
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.RegisterSymbolAction(AnalyzeType, SymbolKind.NamedType);
             context.RegisterSymbolAction(AnalyzeMethod, SymbolKind.Method);
             context.RegisterSymbolAction(AnalyzeProperty, SymbolKind.Property);
@@ -87,7 +89,7 @@ namespace AvaloniaAnalyzers
                     if (baseTypes.HasValue)
                     {
                         var semanticModel = context.Compilation.GetSemanticModel(classSyntax.SyntaxTree);
-                        var typeToFlag = baseTypes.Value.FirstOrDefault(baseType => semanticModel.GetTypeInfo(baseType.Type).Type == typeSymbol.BaseType);
+                        var typeToFlag = baseTypes.Value.FirstOrDefault(baseType => SymbolEqualityComparer.Default.Equals(semanticModel.GetTypeInfo(baseType.Type).Type, typeSymbol.BaseType));
                         if (typeToFlag != null)
                         {
                             context.ReportDiagnostic(Diagnostic.Create(Rule, typeToFlag.GetLocation(), typeToFlag.ToString())); 
